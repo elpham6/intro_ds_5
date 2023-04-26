@@ -520,6 +520,23 @@ acc3 <- mean(tree_pred == data_test$diabetes)
 # come back to this later
 ```
 
+```{r, comment = ""}
+p3 <- round(100*(18759/(18759+5881)), digits = 1)
+p3
+r3 <- round(100*(18759/(18759+9482)), digits = 1)
+r3
+f13 <- 2*((p3*r3)/(p3+r3))
+f13
+```
+```{r, comment = ""}
+p4 <- round(100*(4706/(4706+1485)), digits = 1)
+p4
+r4 <- round(100*(4706/(4706+2399)), digits = 1)
+r4
+f14 <- 2*((p4*r4)/(p4+r4))
+f14
+```
+
 Random Forests
 ```{r, comment = ""}
 library(randomForest)
@@ -534,11 +551,38 @@ importance(tree4)
 ```
 
 ```{r, comment = ""}
-tree4_pred <- predict(tree4, newdata=data_test)
-cm4 <- confusionMatrix(tree4_pred, data_test$diabetes)
-acc4 <- mean(tree4_pred == data_test$diabetes)
-cm4
-acc4 
+tree4_pred_train <- predict(tree4, newdata=data_train)
+cm4_train <- confusionMatrix(tree4_pred_train, data_train$diabetes)
+acc4_train <- mean(tree4_pred_train == data_train$diabetes)
+cm4_train
+acc4_train
 ```
 
-Add some CV validation here for trees
+```{r, comment = ""}
+tree4_pred_test <- predict(tree4, newdata=data_test)
+cm4_test <- confusionMatrix(tree4_pred_test, data_test$diabetes)
+acc4_test <- mean(tree4_pred_test == data_test$diabetes)
+cm4_test
+acc4_test
+```
+
+Evaluation for Random Forests
+
+
+```{r, comment = ""}
+p5 <- round(100*(27164/(27164+1738)), digits = 1)
+p5
+r5 <- round(100*(27164/(27164+1077)), digits = 1)
+r5
+f15 <- 2*((p5*r5)/(p5+r5))
+f15
+```
+
+```{r, comment = ""}
+p6 <- round(100*(4968/(4968+1503)), digits = 1)
+p6
+r6 <- round(100*(4968/(4968+2137)), digits = 1)
+r6
+f16 <- 2*((p6*r6)/(p6+r6))
+f16
+```
