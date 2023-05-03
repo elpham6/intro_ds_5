@@ -56,7 +56,7 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
   #scale_colour_manual(values=cbPalette)
 ```
 
-```{r}
+```{r, include = FALSE}
 # ------------------------------------------------------------------------------------------
 # [AccuracyCutoffInfo] : 
 # Obtain the accuracy on the trainining and testing dataset.
@@ -585,4 +585,26 @@ r6 <- round(100*(4968/(4968+2137)), digits = 1)
 r6
 f16 <- 2*((p6*r6)/(p6+r6))
 f16
+```
+Since random forests' performance is too high on the training set compared to the testing set, I want to do this with 5 fold cross validation.
+
+```{r}
+set.seed(123)
+
+# define repeated cross validation with 5 folds and 3 repeats
+
+repeat_cv <- trainControl(method = 'repeatedcv', number=5, repeats=3)
+
+set.seed(123)
+forest<- train(diabetes ~ HighBP + HighChol + CholCheck + BMI + 
+    Stroke + heart_dis + PhysActivity + Veggies + hvy_alc + GenHlth + 
+    MentHlth + PhysHlth + DiffWalk + Sex + Age + Education + 
+    Income, data=data_train, method='rf',trControl=repeat_cv, metric='Accuracy')
+forest$finalModel
+```
+
+```{r}
+forest_test <- predict(object=forest, newdata=data_test[, -1])
+acc_rf <- mean(forest_test == data_test$diabetes)*100
+acc_rf
 ```
