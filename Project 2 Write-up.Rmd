@@ -382,7 +382,7 @@ forest<- train(diabetes ~ HighBP + HighChol + CholCheck + BMI +
 forest$finalModel
 ```
 
-```{r}
+```{r, include = F}
 forest_train <- predict(object=forest, newdata=data_train[, -1])
 forest_test <- predict(object=forest, newdata=data_test[, -1])
 acc_rf <- mean(forest_test == data_test$diabetes)*100
@@ -392,16 +392,108 @@ acc_rf
 All evaluation metrics are more reasonable now, with accuracy of 
 
 ```{r, comment = ""}
+forest_train <- predict(object=forest, newdata=data_train[, -1])
+forest_test <- predict(object=forest, newdata=data_test[, -1])
+acc_rf <- mean(forest_test == data_test$diabetes)*100
+acc_rf
 cm5_train <- confusionMatrix(forest_train, data_train$diabetes)
 cm5_test <- confusionMatrix(forest_test, data_test$diabetes)
 cm5_draw1 <- draw_confusion_matrix(cm5_train)
+
+```
+
+```{r, comment = ""}
 cm5_draw2 <- draw_confusion_matrix(cm5_test)
 ```
 
 #### 5.4 Lasso Regression
 
+For lasso regression, 
+```{r, comment = ""}
+library(glmnet)
+
+#defining target and predictor variables x and y
+
+y_train <- data_train$diabetes
+
+x_train <- data.matrix(data_train[-c(diabetes)])
+
+# finding optimal lambda value
+cv_model1 <- cv.glmnet(x, y, alpha = 1)
+
+#find optimal lambda value that minimizes test MSE
+best_lambda1 <- cv_model1$lambda.min
+best_lambda1
+
+plot(cv_model1)
+
+# finding features for best model
+best_model1 <- glmnet(x, y, alpha = 1, lambda = best_lambda1)
+coef(best_model1)
+
+new1 = matrix(c(0,1,0,1,1,1,0,1), nrow=1, ncol=8)
+
+#use lasso regression model to predict response value
+#predict(best_model, s = best_lambda, newx = new)
+
+y_train_predict <- predict(best_model, s = best_lambda, newx = x)
+
+#find SST and SSE
+sst1 <- sum((y - mean(y_train))^2)
+sse1 <- sum((y_train_predict - y_train)^2)
+
+#find R-Squared
+rsq1 <- 1 - sse1/sst1
+rsq1
+
+# confusion matrix 
+cm6_train <- confusionMatrix(y_train_predict, data_train$diabetes)
+
+```
+
+```{r, comment = ""}
+#defining target and predictor variables x and y
+
+y_test <- data_test$diabetes
+
+x_test <- data.matrix(data_test[-c(diabetes)])
+
+# finding optimal lambda value
+cv_model2 <- cv.glmnet(x, y, alpha = 1)
+
+#find optimal lambda value that minimizes test MSE
+best_lambda2 <- cv_model2$lambda.min
+best_lambda2
+
+plot(cv_model)
+
+# finding features for best model
+best_model2 <- glmnet(x, y, alpha = 1, lambda = best_lambda2)
+coef(best_model2)
+
+new2 = matrix(c(0,1,0,1,1,1,0,1), nrow=1, ncol=8)
+
+#use lasso regression model to predict response value
+#predict(best_model, s = best_lambda, newx = new)
+
+y_test_predict <- predict(best_model, s = best_lambda, newx = x)
+
+#find SST and SSE
+sst2 <- sum((y - mean(y_test))^2)
+sse2 <- sum((y_test_predict - y_test)^2)
+
+#find R-Squared
+rsq2 <- 1 - sse2/sst2
+rsq2
+
+# confusion matrix
+cm6_test <- confusionMatrix(y_test_predict, data_test$diabetes)
+
+```
 
 #### 5.5 K-Nearest Neighbors
+
+We experimented with K-Nearest neighbors
 
 ```{r, comment = ""}
 
@@ -443,14 +535,122 @@ diabetes_knn <- diabetes_knn %>%
  pr <- knn(dia_train,dia_test,cl=dia_target,k=5)
  
  ##create the confusion matrix
-cm6_train <- confusionMatrix(pr, dia_target)
+cm7_train <- confusionMatrix(pr, dia_target)
 
 ## visualize the table
-cm6_draw <- draw_confusion_matrix(cm6)
+cm7_draw <- draw_confusion_matrix(cm6)
 ```
 
 #### 5.6 Model Comparisons
 
+```{r, include = F}
+acc3 <- 0.728 # acc for class. tree, train
+p3 <- 76.1 # precision for class. tree, train
+r3 <- 66.4 # recall for class. tree, train
+f13 <- 70.9 # 1 for class. tree, train
+```
+
+```{r, include = F}
+acc4 <- 72.8 # acc for class. tree, test
+p4 <- 77.1 # precision for class. tree, test
+r4 <- 64.7 # recall for class. tree, test
+f14 <- 70.4 # 1 for class. tree, test
+```
+
+```{r, include = F}
+# for rf train
+p5 <- round(100*(27164/(27164+1738)), digits = 1)
+p5
+r5 <- round(100*(27164/(27164+1077)), digits = 1)
+r5
+f15 <- 2*((p5*r5)/(p5+r5))
+f15
+```
+
+```{r, include = F}
+# for rf test
+p6 <- round(100*(4968/(4968+1503)), digits = 1)
+p6
+r6 <- round(100*(4968/(4968+2137)), digits = 1)
+r6
+f16 <- 2*((p6*r6)/(p6+r6))
+f16
+```
+
+```{r}
+# for lasso train
+```
+
+```{r}
+# for lasso test
+```
+
+```{r, include = F}
+# for KNN
+acc9 <- 70.8
+p9 <- 71.8
+r9 <- 68.5
+F1 <- 70.1
+```
+
+```{r, comment = ""}
+eva_metrics <- matrix(nrow = 4, ncol = 5)
+rownames(eva_metrics) <- c("Accuracy", "Precision", "Recall", "F1-Score")
+colnames(eva_metrics) <- c("Log. Regression", "Classification Tree", "Random Forests", "Lasso Regression", "K-NN")
+# Assign values for accuracy
+eva_metrics[1, 1] <- acc2   
+eva_metrics[1, 2] <- acc4 
+eva_metrics[1, 3] <- acc6   
+eva_metrics[1, 4] <- acc8
+eva_metrics[1, 5] <- acc9  
+
+# Assign values for precision
+eva_metrics[2, 1] <- p2   
+eva_metrics[2, 2] <- p4 
+eva_metrics[2, 3] <- p6   
+eva_metrics[2, 4] <- p8
+eva_metrics[2, 5] <- p9 
+
+# Assign values for recall
+eva_metrics[3, 1] <- r2   
+eva_metrics[3, 2] <- r4 
+eva_metrics[3, 3] <- r6   
+eva_metrics[3, 4] <- r8
+eva_metrics[3, 5] <- r9 
+
+# Assign values for f1
+eva_metrics[4, 1] <- f12   
+eva_metrics[4, 2] <- f14 
+eva_metrics[4, 3] <- f16   
+eva_metrics[4, 4] <- f18
+eva_metrics[4, 5] <- f19
+
+# Create a visualization
+xkabledply(eva_metrics)
+```
 
 #### 6. Conclusion 
 
+While most predictors line up with existing literature on its relationship/predictive power on prediabetes and diabetes, we found that 
+
+After examining 5 models, we concluded that random forests is the best model with the highest accuracy. Classification tree and K-Nearest neighbors regression also performed well, with similar results - especially with classification tree, which shows how much we can predict with very little. Lasso and logistic regression performed poorly, with very low accuracy. Further review is needed as to why they did not perform well. We could try scaling the predictors, or do more hyperparameter tuning to figure out how to improve the models.
+
+
+
+
+<br>
+**References**
+
+1. Centers for Disease Control and Prevention (2020). *National Diabetes Statistics Report 2020. Estimates of diabetes and its burden in the United States.* 
+
+2. Centers for Disease Control and Prevention. (2022, December 21). *Health and economic benefits of diabetes interventions. Centers for Disease Control and Prevention.* Retrieved March 22, 2023, from https://www.cdc.gov/chronicdisease/programs-impact/pop/diabetes.html 
+
+3. American Diabetes Association | ADA. (n.d.). *The cost of diabetes.* Retrieved March 22, 2023, from https://diabetes.org/about-us/statistics/cost-diabetes 
+
+4. Teboul, A. (2021, November 8). *Diabetes health indicators dataset.* Kaggle. Retrieved March 22, 2023, from https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset?select=diabetes_012_health_indicators_BRFSS2015.csv 
+
+5. Centers for Disease Control and Prevention. (2022, July 7). *What is diabetes?* Centers for Disease Control and Prevention. Retrieved March 22, 2023, from https://www.cdc.gov/diabetes/basics/diabetes.html 
+
+6. Centers for Disease Control and Prevention. (2014, May 16). *CDC - about BRFSS.* Centers for Disease Control and Prevention. Retrieved March 22, 2023, from https://www.cdc.gov/brfss/about/index.htm 
+
+7. Hamasaki H. *Daily physical activity and type 2 diabetes: A review.* World J Diabetes. 2016 Jun 25;7(12):243-51. doi: 10.4239/wjd.v7.i12.243. PMID: 27350847; PMCID: PMC4914832.
